@@ -26,11 +26,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
     "http://localhost:4000", // local frontend
-    "https://urnukh.vercel.app", // Vercel frontend URL чинь https://urnukh-git-main-goldens-projects-4c53454f.vercel.app
+    "https://urnukh-xi.vercel.app", // Vercel frontend URL чинь https://urnukh-git-main-goldens-projects-4c53454f.vercel.app
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
+
 // app.use('/uploads', express.static('/home/ndc-user/image'));
 app.use('/uploads', express.static('uploads'));
 
