@@ -25,7 +25,7 @@ app.use(express.json({ type: 'application/json' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
-    "https://edelguur-api.vercel.app", // local frontend
+    "https://miningsupplies.vercel.app", // local frontend
     "https://urnukh-xi.vercel.app", // Vercel frontend URL чинь https://urnukh-git-main-goldens-projects-4c53454f.vercel.app
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
