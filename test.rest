@@ -1,0 +1,112 @@
+### TEST GET /WEBSITE
+
+# POST http://localhost:4000/api/auth/login
+
+
+# ### TEST GET /dashboard
+
+# GET http://localhost:8383/dashboard
+
+### TEST GET /api/data
+
+PUT http://localhost:4000/api/khoroo/edit
+Content-Type: application/json
+
+{
+    "id":3,
+    "khoroo":"10-р хороо",
+    "district":1
+
+}
+
+###TEST POST /api/data
+POST http://localhost:4000/api/auth/register
+Content-Type: application/json
+
+{
+    "name":"aagii",
+    "email":"golden1127a@gmail.com",
+    "phone":"99405115",
+    "password":"user"
+}
+
+### TEST insert khoroo
+
+POST http://localhost:4000/api/khoroo/create
+Content-Type: application/json
+
+{
+    "khoroo":"1-р хороо"
+}
+#### GET district data
+GET http://183.81.170.62:4000/api/khoroo
+
+#### GET khoroo data
+GET https://shdmonitoring.ub.gov.mn/api/khoroo
+
+#### GET news data
+GET https://shdmonitoring.ub.gov.mn/api/posts
+
+### TEST insert khoroo
+
+POST http://localhost:4000/api/posts/create
+Content-Type: application/json
+
+{
+    "news": "Усан спорт сургалтын төвийн барилга",
+    "totalCost": 11242.4,
+    "contractCost": 11242351000,
+    "endDate": "Sun, 31 Des 2025 00:00:00 GMT",
+    "engener": "хэвийн",
+    "contractor": "Ванхүү ХХК",
+    "khoroo": 1,
+    "orderNum": "Барилга",
+    "impPercent": 90,
+    "source": "Улсын төсөв",
+    "impPhase": "Захиалагчийн алба ОНӨААТҮГ",
+    "startDate": "Sun, 14 Apr 2022 00:00:00 GMT",
+    "title": "Усан спорт сургалтын төвийн барилга"
+}
+
+# {
+#     "title": "Түлхүүр гардуулах гэрээний нөхцөлтэй хороо, өрхийн эмнэлэг, цагдаагын хэсгийн цогцолбор барилга",
+#       "orderNum":"А/61",
+#       "contractor":"Гурванбулаг сод ХХК",
+#       "contractCost":2138572438,
+#       "engener":"Ж.Мөнхнаран",
+#       "startDate":"Mon, 26 May 2025 11:14:29 GMT",
+#       "endDate":"Mon, 26 May 2025 11:14:29 GMT",
+#       "impPhase":"Гүйцэтгэх үе шат",
+#       "impPercent":90,
+#       "source":"НТХО",
+#       "totalCost":500000000,
+#       "news":"Гэр хорооллыг хөгжүүлэх хөрөнгө оруулалтыг дэмжих хөтөлбөр төсөл нь Улаанбаатар хотын гэр хорооллын бүсэд нийгмийн болон инженерийн дэд бүтцийг цогцоор шийдсэн 6 шинэ дэд төвийн ажлыг 9 жилийн хугацаанд 3 үе шаттайгаар хийж хэрэгжүүлнэ.",
+#     "khoroo":"2-р хороо"
+# }
+
+#### GET khoroo data
+
+POST http://localhost:4000/api/posts/detail
+Content-Type: application/json
+
+{
+    "id":1
+}
+
+### POST search data
+
+POST http://localhost:4000/api/posts/search
+Content-Type: application/json
+
+{
+    "title":"Түлхүүр"
+}
+
+### POST search khoroo
+
+POST http://localhost:4000/api/khoroo/search
+Content-Type: application/json
+
+{
+    "id":4
+}
