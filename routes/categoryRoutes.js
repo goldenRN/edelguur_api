@@ -119,6 +119,48 @@ router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
     client.release();
   }
 });
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // 1️⃣ Бүх категори жагсаалт
+    const allCategories = await pool.query(`
+      SELECT c.id AS category_id, c.name AS category_name, c.image AS category_image
+      FROM categories c
+    `);
+
+    // 2️⃣ Тухайн category
+    const categoryResult = await pool.query(
+      `SELECT id AS category_id, name AS category_name, image AS category_image
+       FROM categories WHERE id = $1`,
+      [id]
+    );
+
+    if (categoryResult.rows.length === 0)
+      return res.status(404).json({ message: "Category not found" });
+
+    // 3️⃣ Category-ийн бүтээгдэхүүнүүд
+    const productResult = await pool.query(
+      `SELECT p.*, 
+              COALESCE(json_agg(pi.*) FILTER (WHERE pi.id IS NOT NULL), '[]') AS images
+       FROM products p
+       LEFT JOIN product_images pi ON pi.product_id = p.id
+       WHERE p.category_id = $1
+       GROUP BY p.id
+       ORDER BY p.created_at DESC`,
+      [id]
+    );
+
+    res.json({
+      categories: allCategories.rows, // sidebar-д
+      category: categoryResult.rows[0],
+      products: productResult.rows,
+    });
+  } catch (err) {
+    console.error("Category fetch error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // ✅ 4. Ангилал устгах
 router.delete("/:id", authMiddleware, async (req, res) => {
