@@ -49,7 +49,7 @@ router.get("/", async (req, res) => {
           json_build_object(
             'id', s.id,
             'name', s.name
-          )
+          ) FILTER (WHERE s.id IS NOT NULL),'[]'
         ) AS subcategories
       FROM categories c
       LEFT JOIN sub_categories s ON s.category_id = c.id
