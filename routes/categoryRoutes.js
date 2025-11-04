@@ -2,7 +2,7 @@
 const express = require("express");
 const pool = require("../db");
 const router = express.Router();
-
+const authMiddleware = require("./authMiddleware");
 const { v2: cloudinary } = require('cloudinary');
 const dotenv = require('dotenv');
 const fs = require('fs');
