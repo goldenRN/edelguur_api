@@ -8,7 +8,7 @@ const dotenv = require('dotenv');
 const fs = require('fs');
 dotenv.config();
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-
+const multer = require('multer');
 
 // Cloudinary тохиргоо
 cloudinary.config({
