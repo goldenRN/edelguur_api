@@ -7,12 +7,13 @@ const dotenv = require('dotenv');
 const unitRoutes = require('./routes/unitRoutes.js');
 const subCategoryRoutes = require('./routes/subCategoryRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const orderRoutes = require('./routes/orderRoutes');
 const brandRoutes = require('./routes/brandRoutes.js');
 const productRoutes = require('./routes/productRoutes.js');
 const imageRoutes = require('./routes/image');
+const bannerRoutes = require('./routes/bannerRoutes.js');
 const productImageRoutes = require('./routes/productImageRoutes');
 const statusRoutes = require("./routes/statusRoutes.js");
+const typeRoutes = require("./routes/typeRoutes.js");
 const { router: authRoute } = require('./routes/authRoutes');
 
 
@@ -46,6 +47,8 @@ app.use('/api/brand', brandRoutes); // brand
 app.use('/api/image', imageRoutes); // zurag
 app.use('/api/productimg', productImageRoutes); // product zurag
 app.use("/api/status", statusRoutes); // tolov
+app.use("/api/type", typeRoutes); //torol
+app.use('/api/banner', bannerRoutes); // brand
 // Default route
 app.get('/', (req, res) => {
   res.send('API is working!');

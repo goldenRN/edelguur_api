@@ -2,7 +2,7 @@
 const express = require("express");
 const pool = require("../db");
 const router = express.Router();
-const authMiddleware = require("./authMiddleware");
+const authMiddleware = require('../middleware/authMiddleware');
 const { v2: cloudinary } = require('cloudinary');
 const dotenv = require('dotenv');
 const fs = require('fs');
@@ -16,6 +16,8 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -23,6 +25,7 @@ const storage = new CloudinaryStorage({
     allowed_formats: ["jpg", "png", "jpeg", "webp"],
   },
 });
+
 const upload = multer({ storage });
 
 // ✅ 1. Ангилал нэмэх
@@ -120,19 +123,20 @@ router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
     client.release();
   }
 });
+// ✅ categoryRoutes.js (зөв хувилбар)
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     // 1️⃣ Бүх категори жагсаалт
     const allCategories = await pool.query(`
-      SELECT c.id AS category_id, c.name AS category_name, c.image AS category_image
+      SELECT c.id AS category_id, c.name AS category_name, c.image_url AS category_image
       FROM categories c
     `);
 
     // 2️⃣ Тухайн category
     const categoryResult = await pool.query(
-      `SELECT id AS category_id, name AS category_name, image AS category_image
+      `SELECT id AS category_id, name AS category_name, image_url AS category_image
        FROM categories WHERE id = $1`,
       [id]
     );
@@ -153,7 +157,7 @@ router.get("/:id", async (req, res) => {
     );
 
     res.json({
-      categories: allCategories.rows, // sidebar-д
+      categories: allCategories.rows,
       category: categoryResult.rows[0],
       products: productResult.rows,
     });

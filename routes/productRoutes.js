@@ -186,6 +186,8 @@ router.put("/:id", async (req, res) => {
         status_name,
         price,
         stock,
+        type_id,
+        type_name,
         images = [], // ⬅️ front-оос ирэх [{ image_url, public_id }]
     } = req.body;
 
@@ -205,8 +207,10 @@ router.put("/:id", async (req, res) => {
            brand_id=$7, brand_name=$8,
            unit_id=$9, unit_name=$10,
            status_id=$11, status_name=$12,
-           price=$13, stock=$14, updated_at=NOW()
-       WHERE id=$15`,
+           price=$13, stock=$14, 
+           type_id=$15, type_name=$16,
+           updated_at=NOW()
+       WHERE id=$17`,
             [
                 name,
                 description,
@@ -222,6 +226,8 @@ router.put("/:id", async (req, res) => {
                 status_name || null,
                 price ? parseFloat(price) : 0,
                 stock ? parseInt(stock) : 0,
+                safeInt(type_id),
+                type_name || null,
                 id,
             ]
         );
@@ -232,7 +238,6 @@ router.put("/:id", async (req, res) => {
             [id]
         );
         const oldImages = oldImagesRes.rows;
-
         const oldPublicIds = oldImages.map((img) => img.public_id);
         const newPublicIds = images.map((img) => img.public_id);
 
@@ -306,13 +311,15 @@ router.get("/:id", async (req, res) => {
               s.name AS subcategory_name, 
               b.name AS brand_name, 
               u.name AS unit_name, 
-              st.name AS status_name
+              st.name AS status_name,
+              t.name AS type_name,
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id
        LEFT JOIN sub_categories s ON p.subcategory_id = s.id
        LEFT JOIN brands b ON p.brand_id = b.id
        LEFT JOIN units u ON p.unit_id = u.id
        LEFT JOIN status st ON p.status_id = st.id
+       LEFT JOIN typetable t ON p.type_id = t.id
        WHERE p.id = $1`,
             [id]
         );
@@ -337,18 +344,18 @@ router.get("/:id", async (req, res) => {
 });
 // ✅ Get products by category ID
 router.get("/category/:id", async (req, res) => {
-  const { id } = req.params;
+    const { id } = req.params;
 
-  try {
-    // Категорийн нэр авах
-    const categoryResult = await pool.query(
-      `SELECT name FROM categories WHERE id = $1`,
-      [id]
-    );
+    try {
+        // Категорийн нэр авах
+        const categoryResult = await pool.query(
+            `SELECT name FROM categories WHERE id = $1`,
+            [id]
+        );
 
-    // Тухайн категорийн бараанууд
-    const productResult = await pool.query(
-      `SELECT p.*, 
+        // Тухайн категорийн бараанууд
+        const productResult = await pool.query(
+            `SELECT p.*, 
         COALESCE(
           json_agg(
             json_build_object('image_id', pi.id, 'image_url', pi.image_url)
@@ -359,17 +366,17 @@ router.get("/category/:id", async (req, res) => {
       WHERE p.category_id = $1
       GROUP BY p.id
       ORDER BY p.created_at DESC`,
-      [id]
-    );
+            [id]
+        );
 
-    res.json({
-      category_name: categoryResult.rows[0]?.name || "Тодорхойгүй",
-      products: productResult.rows,
-    });
-  } catch (err) {
-    console.error("Error fetching category products:", err);
-    res.status(500).json({ error: "Database алдаа" });
-  }
+        res.json({
+            category_name: categoryResult.rows[0]?.name || "Тодорхойгүй",
+            products: productResult.rows,
+        });
+    } catch (err) {
+        console.error("Error fetching category products:", err);
+        res.status(500).json({ error: "Database алдаа" });
+    }
 });
 
 
