@@ -97,8 +97,11 @@ router.post("/", async (req, res) => {
         unit_name,
         status_id,
         status_name,
+        type_id,
+        type_name,
         price,
         stock,
+        material,
         images = [], // [{ image_url, public_id }]
     } = req.body;
 
@@ -114,9 +117,9 @@ router.post("/", async (req, res) => {
         const insertProductRes = await client.query(
             `INSERT INTO products 
         (name, description, category_id, category_name, subcategory_id, subcategory_name,
-         brand_id, brand_name, unit_id, unit_name, status_id, status_name,
-         price, stock, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW(),NOW())
+         brand_id, brand_name, unit_id, unit_name, status_id, status_name, type_id, type_name,
+         price, stock, material, created_at, updated_at )
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,NOW(),NOW())
        RETURNING id`,
             [
                 name,
@@ -131,8 +134,11 @@ router.post("/", async (req, res) => {
                 unit_name || null,
                 safeInt(status_id),
                 status_name || null,
+                safeInt(type_id),
+                type_name || null,
                 price ? parseFloat(price) : 0,
                 stock ? parseInt(stock) : 0,
+                material || null,
             ]
         );
 
@@ -188,6 +194,7 @@ router.put("/:id", async (req, res) => {
         stock,
         type_id,
         type_name,
+        material,
         images = [], // ⬅️ front-оос ирэх [{ image_url, public_id }]
     } = req.body;
 
@@ -208,9 +215,9 @@ router.put("/:id", async (req, res) => {
            unit_id=$9, unit_name=$10,
            status_id=$11, status_name=$12,
            price=$13, stock=$14, 
-           type_id=$15, type_name=$16,
+           type_id=$15, type_name=$16, material=$17,
            updated_at=NOW()
-       WHERE id=$17`,
+       WHERE id=$18`,
             [
                 name,
                 description,
@@ -228,6 +235,7 @@ router.put("/:id", async (req, res) => {
                 stock ? parseInt(stock) : 0,
                 safeInt(type_id),
                 type_name || null,
+                material || null,
                 id,
             ]
         );
@@ -283,19 +291,37 @@ router.put("/:id", async (req, res) => {
 });
 
 
-
-
-// ✅ Бараа устгах
+// 🧹 Бараа устгах route
 router.delete("/:id", async (req, res) => {
     const { id } = req.params;
-    try {
-        const result = await pool.query("DELETE FROM products WHERE id=$1", [id]);
-        if (result.rowCount === 0)
-            return res.status(404).json({ message: "Бараа олдсонгүй" });
 
-        res.json({ message: "Амжилттай устгалаа" });
+    try {
+        // 1️⃣ product_images хүснэгтээс public_id-г авна
+        const { rows: imageRows } = await pool.query(
+            "SELECT public_id FROM product_images WHERE product_id = $1",
+            [id]
+        );
+
+        // 2️⃣ Cloudinary-оос зургуудыг устгах
+        for (const img of imageRows) {
+            try {
+                await cloudinary.uploader.destroy(img.public_id);
+            } catch (cloudErr) {
+                console.warn("⚠️ Cloudinary устгах алдаа:", cloudErr.message);
+            }
+        }
+
+        // 3️⃣ DB доторх зураг болон барааг устгах
+        await pool.query("DELETE FROM product_images WHERE product_id = $1", [id]);
+        const result = await pool.query("DELETE FROM products WHERE id = $1", [id]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: "Бараа олдсонгүй" });
+        }
+
+        res.json({ message: "Амжилттай устгалаа (зурагтай хамт)" });
     } catch (err) {
-        console.error(err);
+        console.error("❌ Устгах үед алдаа:", err);
         res.status(500).json({ message: "Бараа устгахад алдаа гарлаа" });
     }
 });
@@ -312,7 +338,7 @@ router.get("/:id", async (req, res) => {
               b.name AS brand_name, 
               u.name AS unit_name, 
               st.name AS status_name,
-              t.name AS type_name,
+              t.name AS type_name
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id
        LEFT JOIN sub_categories s ON p.subcategory_id = s.id
