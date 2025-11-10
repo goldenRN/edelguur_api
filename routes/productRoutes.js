@@ -15,15 +15,15 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 // ✅ Бүх бараа авах
-router.get("/", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT * FROM products ORDER BY id DESC");
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Барааны жагсаалт татахад алдаа гарлаа" });
-    }
-});
+// router.get("/", async (req, res) => {
+//     try {
+//         const result = await pool.query("SELECT * FROM products ORDER BY id DESC");
+//         res.json(result.rows);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ message: "Барааны жагсаалт татахад алдаа гарлаа" });
+//     }
+// });
 // 🆕 Шинэ бараа (created_at -аар эрэмбэлж 10 ширхэг)
 router.get("/latest", async (req, res) => {
     try {
@@ -405,7 +405,25 @@ router.get("/category/:id", async (req, res) => {
     }
 });
 
+router.get("/", async (req, res) => {
+  const { sort, discount } = req.query;
 
+  let query = "SELECT * FROM products";
+  const params = [];
+
+  if (discount === "true") {
+    query += " WHERE discount_price IS NOT NULL";
+  }
+
+  if (sort === "new") {
+    query += " ORDER BY created_at DESC";
+  } else if (sort === "popular") {
+    query += " ORDER BY views DESC"; // эсвэл sales_count гэх мэт
+  }
+
+  const result = await pool.query(query, params);
+  res.json(result.rows);
+});
 
 
 module.exports = router;
