@@ -14,16 +14,7 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-// ✅ Бүх бараа авах
-// router.get("/", async (req, res) => {
-//     try {
-//         const result = await pool.query("SELECT * FROM products ORDER BY id DESC");
-//         res.json(result.rows);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ message: "Барааны жагсаалт татахад алдаа гарлаа" });
-//     }
-// });
+
 // 🆕 Шинэ бараа (created_at -аар эрэмбэлж 10 ширхэг)
 router.get("/latest", async (req, res) => {
     try {
@@ -405,24 +396,134 @@ router.get("/category/:id", async (req, res) => {
     }
 });
 
+router.get("/subcategory/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Категорийн нэр авах
+        const categoryResult = await pool.query(
+            `SELECT name FROM sub_categories WHERE id = $1`,
+            [id]
+        );
+
+        // Тухайн категорийн бараанууд
+        const productResult = await pool.query(
+            `SELECT p.*, 
+        COALESCE(
+          json_agg(
+            json_build_object('image_id', pi.id, 'image_url', pi.image_url)
+          ) FILTER (WHERE pi.id IS NOT NULL), '[]'
+        ) AS images
+      FROM products p
+      LEFT JOIN product_images pi ON p.id = pi.product_id
+      WHERE p.subcategory_id = $1
+      GROUP BY p.id
+      ORDER BY p.created_at DESC`,
+            [id]
+        );
+
+        res.json({
+            category_name: categoryResult.rows[0]?.name || "Тодорхойгүй",
+            products: productResult.rows,
+        });
+    } catch (err) {
+        console.error("Error fetching category products:", err);
+        res.status(500).json({ error: "Database алдаа" });
+    }
+});
+
+router.get("/products-by-category/:id", async (req, res) => {
+  const { id } = req.params; // category_id
+  const subParam = req.query.sub;
+
+  // Хоосон эсвэл "null" string бол null болгоно
+  const categoryId = parseInt(id, 10);
+  const subId =
+    !subParam || subParam === "null" || subParam === "undefined"
+      ? null
+      : parseInt(subParam, 10);
+
+  try {
+    let productQuery;
+    let params;
+
+    if (subId) {
+      productQuery = `
+        SELECT p.*, 
+          COALESCE(
+            json_agg(
+              json_build_object('image_id', pi.id, 'image_url', pi.image_url)
+            ) FILTER (WHERE pi.id IS NOT NULL), '[]'
+          ) AS images
+        FROM products p
+        LEFT JOIN product_images pi ON p.id = pi.product_id
+        WHERE p.subcategory_id = $1
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+      `;
+      params = [subId];
+    } else {
+      productQuery = `
+        SELECT p.*, 
+          COALESCE(
+            json_agg(
+              json_build_object('image_id', pi.id, 'image_url', pi.image_url)
+            ) FILTER (WHERE pi.id IS NOT NULL), '[]'
+          ) AS images
+        FROM products p
+        LEFT JOIN product_images pi ON p.id = pi.product_id
+        WHERE p.category_id = $1
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+      `;
+      params = [categoryId];
+    }
+
+    const result = await pool.query(productQuery, params);
+
+    // Категори эсвэл дэд категори нэр авах
+    let nameQuery;
+    let nameParams;
+
+    if (subId) {
+      nameQuery = `SELECT name FROM sub_categories WHERE id = $1`;
+      nameParams = [subId];
+    } else {
+      nameQuery = `SELECT name FROM categories WHERE id = $1`; // анхаар: column нь "id"
+      nameParams = [categoryId];
+    }
+
+    const nameRes = await pool.query(nameQuery, nameParams);
+
+    res.json({
+      category_name: nameRes.rows[0]?.name || "Тодорхойгүй ангилал",
+      products: result.rows,
+    });
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 router.get("/", async (req, res) => {
-  const { sort, discount } = req.query;
+    const { sort, discount } = req.query;
 
-  let query = "SELECT * FROM products";
-  const params = [];
+    let query = "SELECT * FROM products";
+    const params = [];
 
-  if (discount === "true") {
-    query += " WHERE discount_price IS NOT NULL";
-  }
+    if (discount === "true") {
+        query += " WHERE discount_price IS NOT NULL";
+    }
 
-  if (sort === "new") {
-    query += " ORDER BY created_at DESC";
-  } else if (sort === "popular") {
-    query += " ORDER BY views DESC"; // эсвэл sales_count гэх мэт
-  }
+    if (sort === "new") {
+        query += " ORDER BY created_at DESC";
+    } else if (sort === "popular") {
+        query += " ORDER BY views DESC"; // эсвэл sales_count гэх мэт
+    }
 
-  const result = await pool.query(query, params);
-  res.json(result.rows);
+    const result = await pool.query(query, params);
+    res.json(result.rows);
 });
 
 
