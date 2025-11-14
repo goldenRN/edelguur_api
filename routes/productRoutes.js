@@ -15,6 +15,34 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// 🔍 Бараа хайх API
+router.get("/search", async (req, res) => {
+  const { q } = req.query; // хэрэглэгчийн хайсан үг
+  try {
+    const result = await pool.query(
+      `
+      SELECT p.*, 
+        COALESCE(
+          json_agg(
+            json_build_object('id', pi.id, 'image_url', pi.image_url)
+          ) FILTER (WHERE pi.id IS NOT NULL), '[]'
+        ) AS images
+      FROM products p
+      LEFT JOIN product_images pi ON p.id = pi.product_id
+      WHERE LOWER(p.name) LIKE LOWER($1)
+         OR LOWER(p.description) LIKE LOWER($1)
+      GROUP BY p.id
+      ORDER BY p.created_at DESC
+      `,
+      [`%${q}%`]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Хайлтын алдаа:", err);
+    res.status(500).json({ message: "Хайлтын үед алдаа гарлаа" });
+  }
+});
 // 🆕 Шинэ бараа (created_at -аар эрэмбэлж 10 ширхэг)
 router.get("/latest", async (req, res) => {
     try {
@@ -525,6 +553,7 @@ router.get("/", async (req, res) => {
     const result = await pool.query(query, params);
     res.json(result.rows);
 });
+
 
 
 module.exports = router;

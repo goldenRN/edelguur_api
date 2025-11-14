@@ -56,18 +56,20 @@ router.get("/", async (req, res) => {
         c.id AS category_id,
         c.name AS category_name,
         c.image_url AS category_image,
+        c.description AS category_description,
         COALESCE(
           json_agg(
             json_build_object(
               'id', s.id,
-              'name', s.name
+              'name', s.name,
+              'description', s.description
             )
           ) FILTER (WHERE s.id IS NOT NULL),
           '[]'
         ) AS subcategories
       FROM categories c
       LEFT JOIN sub_categories s ON s.category_id = c.id
-      GROUP BY c.id, c.name, c.image_url
+      GROUP BY c.id, c.name, c.image_url, c.description
       ORDER BY c.id ASC;
     `);
     res.json(result.rows);
