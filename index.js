@@ -9,12 +9,13 @@ const subCategoryRoutes = require('./routes/subCategoryRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const brandRoutes = require('./routes/brandRoutes.js');
 const productRoutes = require('./routes/productRoutes.js');
-const imageRoutes = require('./routes/image');
 const bannerRoutes = require('./routes/bannerRoutes.js');
 const productImageRoutes = require('./routes/productImageRoutes');
 const statusRoutes = require("./routes/statusRoutes.js");
 const typeRoutes = require("./routes/typeRoutes.js");
 const { router: authRoute } = require('./routes/authRoutes');
+const productVariantsRouter = require('./routes/productVariants');
+const orderRouter = require('./routes/orderRoutes');
 
 
 dotenv.config();
@@ -44,11 +45,12 @@ app.use('/api/subcategory', subCategoryRoutes); //ded angilal
 app.use('/api/category', categoryRoutes); // angilal
 app.use('/api/product', productRoutes); //baraa
 app.use('/api/brand', brandRoutes); // brand
-app.use('/api/image', imageRoutes); // zurag
 app.use('/api/productimg', productImageRoutes); // product zurag
 app.use("/api/status", statusRoutes); // tolov
 app.use("/api/type", typeRoutes); //torol
 app.use('/api/banner', bannerRoutes); // brand
+app.use('/api/productvar', productVariantsRouter);
+app.use('/api/orders', orderRouter);
 // Default route
 app.get('/', (req, res) => {
   res.send('API is working!');

@@ -20,6 +20,7 @@ cloudinary.config({
 // Олон зураг upload
 const uploadMultiple = multer({ dest: 'uploads/' }).array('images', 5); // max 5 зураг
 
+
 router.post('/upload-multiple', uploadMultiple, async (req, res) => {
   try {
     const files = req.files; // array of files
@@ -61,4 +62,4 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-module.exports =  router ;
+module.exports = router;

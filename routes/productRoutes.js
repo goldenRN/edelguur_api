@@ -1,12 +1,10 @@
 const express = require("express");
 const pool = require("../db");
 const router = express.Router();
-
 const { v2: cloudinary } = require('cloudinary');
 const dotenv = require('dotenv');
 const fs = require('fs');
 dotenv.config();
-
 
 // Cloudinary тохиргоо
 cloudinary.config({
@@ -192,7 +190,6 @@ router.post("/", async (req, res) => {
     }
 });
 
-
 // ✅ Product засах + зураг шинэчлэх
 router.put("/:id", async (req, res) => {
     const { id } = req.params;
@@ -285,8 +282,8 @@ router.put("/:id", async (req, res) => {
 
         for (const img of toInsert) {
             await client.query(
-                "INSERT INTO product_images (product_id, image_url, public_id) VALUES ($1, $2, $3)",
-                [id, img.image_url, img.public_id]
+                "INSERT INTO product_images (product_id, product_variant_id, image_url, public_id) VALUES ($1, $2, $3, $4)",
+                [id, img.product_variant_id || null, img.image_url, img.public_id]
             );
         }
 
@@ -303,12 +300,11 @@ router.put("/:id", async (req, res) => {
         console.error("❌ Product update error:", err);
         res
             .status(500)
-            .json({ success: false, message: "Бараа засахад алдаа гарлаа", err });
+            .json({ success: false,  message: err.message , err });
     } finally {
         client.release();
     }
 });
-
 
 // 🧹 Бараа устгах route
 router.delete("/:id", async (req, res) => {
@@ -387,6 +383,7 @@ router.get("/:id", async (req, res) => {
         res.status(500).json({ message: "Бараа татахад алдаа гарлаа" });
     }
 });
+
 // ✅ Get products by category ID
 router.get("/category/:id", async (req, res) => {
     const { id } = req.params;
@@ -424,6 +421,7 @@ router.get("/category/:id", async (req, res) => {
     }
 });
 
+// ✅ Get products by subcategory ID
 router.get("/subcategory/:id", async (req, res) => {
     const { id } = req.params;
 
@@ -533,7 +531,6 @@ router.get("/products-by-category/:id", async (req, res) => {
   }
 });
 
-
 router.get("/", async (req, res) => {
     const { sort, discount } = req.query;
 
@@ -554,6 +551,6 @@ router.get("/", async (req, res) => {
     res.json(result.rows);
 });
 
-
-
 module.exports = router;
+
+
